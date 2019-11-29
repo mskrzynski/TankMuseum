@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tank Museum RESTful Web Services Project</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-spacing: 0;
+            text-align: center;
+        }
+        th, td {
+            padding: 10px;
+        }
+
+        input[type="number"]{
+            width:300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tank Museum - List of all tanks:</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Tank ID:</th>
+                <th>Tank name:</th>
+                <th>Tank weight (in tons):</th>
+            </tr>
+        </thead>
+        <tbody>
+                <tr data-th-if="${tanksList.isEmpty()}">
+                    <td colspan="3" style="text-align: center;">No tanks in the database</td>
+                </tr>
+                <tr data-th-each="tank : ${tanksList}">
+                    <td data-th-text="${tank.tankID}"></td>
+                    <td data-th-text="${tank.tankName}"></td>
+                    <td style="text-align: right" data-th-text="${tank.tankWeight}"></td>
+                </tr>
+        </tbody>
+    </table>
+
+    <h2>Add Tank</h2>
+    <form action="/add" method="POST">
+        <div>
+            <label for="tankName">Tank name:</label>
+            <input type="text" id="tankName" name="tankName" size="60"/><br />
+        </div>
+        <div>
+            <label for="tankWeight">Tank weight (in tons):</label>
+            <input type="number" min="0" step="0.01" id="tankWeight" name="tankWeight"/><br />
+        </div>
+        <button type="submit">Add</button>
+    </form>
+    <h3>Newest tank ID added: </h3> <span data-th-if="${!tanksList.isEmpty()}"><span data-th-text="${newID.tankID}"></span></span>
+
+    <h2>Remove Tank</h2>
+    <form action="/remove" method="POST">
+        <div>
+            <label for="tankID">ID of a tank to be removed:</label>
+            <input type="number" min="0" id="tankID" name="tankID"/><br />
+        </div>
+        <button type="submit">Remove</button>
+    </form>
+</body>
+</html>
