@@ -3,7 +3,7 @@ A simple RESTful Web Services example project
 
 It was created and is utilising the following technologies:
 
-- IntelliJ IDEA (with Mongo Plugin installed)
+- IntelliJ IDEA
 - Spring Initializr (Spring Boot):
   * Maven
   * Java 11 (War packaging)
