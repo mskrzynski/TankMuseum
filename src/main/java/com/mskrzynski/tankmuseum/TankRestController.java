@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
 import java.math.BigInteger;
 
 @Controller //Why @Controller works, but @RestController doesn't?
@@ -16,17 +16,22 @@ public class TankRestController {
     private BigInteger newTankID;
 
     @Autowired
-    public void setTankRepository(TankRepository tankRepository) {
+    public void setTankRepository(@Valid TankRepository tankRepository) {
         this.tankRepository = tankRepository;
     }
 
-    @RequestMapping("/")
+    @GetMapping("/")
     public String redirectToTanksList(){
         return "redirect:/tanks";
     }
 
-    @RequestMapping("/tanks")
-    public String tanksList(Model model) {
+    @GetMapping("/error")
+    public String showError(){
+        return "error";
+    }
+
+    @GetMapping("/tanks")
+    public String tanksList(@Valid Model model) {
         model.addAttribute("tanksList", tankRepository.findAll(Sort.by("tankName")));
         if(newTankID != null){
             tankRepository.findById(newTankID).ifPresent(o -> model.addAttribute("newID", o)); //Taking object from Optional Class
@@ -34,20 +39,34 @@ public class TankRestController {
         return "tanks";
     }
 
-    @RequestMapping("/add")
-    public String addTank(@RequestParam String tankName, @RequestParam String tankWeight) {
+    @PostMapping("/add")
+    public String addTank(@Valid @RequestParam String tankName, @Valid @RequestParam String tankWeight) {
         Tank tank = new Tank();
         tank.setTankName(tankName);
         tank.setTankWeight(tankWeight);
-        if(!StringUtils.isBlank(tankName) && !StringUtils.isBlank(tankWeight)) tankRepository.save(tank);
-        newTankID = tank.getTankID();
-        return "redirect:/tanks";
+        //Check if data is really empty, database does except empty-looking string (like space/multiple spaces) so we have to exclude them
+        if(StringUtils.isBlank(tankName) || StringUtils.isBlank(tankWeight)){
+            return "redirect:/error";
+        }
+        else {
+            tankRepository.save(tank);
+            newTankID = tank.getTankID();
+            return "redirect:/tanks";
+
+        }
     }
 
-    @RequestMapping("/remove")
-    public String removeTank(@RequestParam(value = "tankID")BigInteger id) {
-        Tank product = tankRepository.findById(id).orElse(null);
-        if(id != null) tankRepository.delete(product);
-        return "redirect:/tanks";
+    //Thymeleaf creates HTML templates, HTML does not have a DELETE method, so need to use POST
+    //If using something else, replace with RequestMethod.DELETE
+    @RequestMapping(value="/remove", method = RequestMethod.POST)
+    public String removeTank(@Valid @RequestParam(value = "tankID")BigInteger id) {
+        Tank tank = tankRepository.findById(id).orElse(null);
+        if(tank == null){
+            return "redirect:/error";
+        }
+        else{
+            tankRepository.delete(tank);
+            return "redirect:/tanks";
+        }
     }
 }

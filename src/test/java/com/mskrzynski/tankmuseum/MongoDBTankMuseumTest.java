@@ -4,47 +4,44 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import java.util.Objects;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 @DataMongoTest
 @ExtendWith(SpringExtension.class)
 class MongoDBTankMuseumTest {
+
+    @Autowired TankRepository tankRepository;
+    @Autowired MongoOperations mongoOperations;
+
     @Test
-    void test(@Autowired TankRepository tankRepository) throws InterruptedException{
-        Tank tank1 = new Tank("KW-1", "47.41");
-        tankRepository.save(tank1);
+    void createRepositoryTest() {
+        assertNotNull(tankRepository);
+    }
 
-        Tank tank2 = new Tank("Panzerkampfwagen VI Tiger", "55.54");
-        tankRepository.save(tank2);
+    @Test
+    void createTankTest() {
+        Tank tank = new Tank("KW-1", "47.41");
+        Tank tankInserted = tankRepository.save(tank);
+        assertThat(tankInserted.getTankName(), is(equalTo("KW-1")));
+        assertThat(Objects.requireNonNull(mongoOperations.findById(tankInserted.getTankID(), Tank.class)).getTankName(), is(equalTo("KW-1")));
+        System.out.println("createTankTest ID: " + tankInserted.getTankID());
+    }
 
-        Tank tank3 = new Tank("Panzerkampfwagen VIII Maus", "188.98");
-        tankRepository.save(tank3);
-
-        Tank tank4 = new Tank("T-34", "27.94");
-        tankRepository.save(tank4);
-
-        Tank tank5 = new Tank("IS-3", "48.68");
-        tankRepository.save(tank5);
-
-        Tank tank6 = new Tank("Mk IV Churchill", "38.45");
-        tankRepository.save(tank6);
-
-        Tank tank7 = new Tank("Panzerkampfwagen V Panther", "44.45");
-        tankRepository.save(tank7);
-
-        Tank tank8 = new Tank("T-34-85 Rudy", "32.48");
-        tankRepository.save(tank8);
-
-        try {
-            Tank tank9 = new Tank("T-34-85 Rudy", "32.48");
-            tankRepository.save(tank9);
-        }
-        catch(DuplicateKeyException e) {
-            System.out.println(e.toString());
-        }
-
-        Thread.sleep(5000);
+    @Test
+    void removeTankTest() {
+        Tank removeTank = mongoOperations.findOne(query(where("tankName").is("KW-1")), Tank.class);
+        assert removeTank != null;
+        System.out.println("removeTankTest ID: " + removeTank.getTankID());
+        tankRepository.delete(removeTank);
+        assertThat(mongoOperations.findById(removeTank.getTankID(), Tank.class), is(equalTo(null)));
     }
 }
 

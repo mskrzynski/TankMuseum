@@ -3,14 +3,20 @@ package com.mskrzynski.tankmuseum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
 import java.math.BigInteger;
 
 @Document(collection = "tanks", collation = "en")
 public class Tank {
     @Id
+    @NotEmpty
     private BigInteger tankID; //Cannot use Integer, must use String or BigInteger
     @Indexed(unique=true)
+    @NotEmpty
     private String tankName;
+    @NotEmpty
+    @Min(0)
     private String tankWeight;
 
     public Tank() {
